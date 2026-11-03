@@ -35,7 +35,8 @@ FPS, W, H = 30, 1080, 1920
 TARGET_LUFS, PEAK = -14.0, -1.0
 DURATION_TOL = 0.05
 WINDOW_GAP = 0.06
-SUB_Y = 1730              # bottom edge of captions: above Instagram's caption and buttons
+SUB_Y = 1600              # bottom edge of captions: inside the 4:5 feed frame (1730 was cropped away in the feed)
+FEED_TOP, FEED_BOTTOM = 285, 1635   # the feed and desktop show a reel cropped to 4:5 (1080x1350, centred)
 SUB_MAX_CHARS = 24
 HIGHLIGHT = "#ffd34d"
 LAYOUTS = ("split", "visual", "speaker")
@@ -158,6 +159,10 @@ def load_spec(work: Path) -> dict:
     for s in (sp.get("dynamics") or {}).get("schedule", []):
         if s.get("layout") not in LAYOUTS:
             die(f"dynamics: неизвестная раскладка {s.get('layout')!r} (есть: {', '.join(LAYOUTS)})")
+    sub_y = sp.get("sub_y", SUB_Y)
+    if isinstance(sub_y, bool) or not isinstance(sub_y, (int, float)) or not FEED_TOP < sub_y <= FEED_BOTTOM:
+        die(f"sub_y {sub_y!r}: субтитры должны кончаться внутри рамки ленты 4:5 (до {FEED_BOTTOM}), "
+            "иначе в ленте и на компьютере их не видно")
     sfx_options(sp)
     music_options(sp)
     return sp
@@ -306,6 +311,9 @@ ZONES_HTML = ('<div class="zones">'
               '<div style="left:0;right:0;top:0;height:115px;background:rgba(255,0,0,.35)"></div>'
               '<div style="left:0;right:0;top:1248px;height:2px;background:#ff0"></div>'
               '<div style="left:0;right:0;top:1760px;height:80px;background:rgba(255,0,0,.35)"></div>'
+              # magenta: the 4:5 feed frame - everything that must be read stays between these lines
+              f'<div style="left:0;right:0;top:{FEED_TOP}px;height:3px;background:#f0f"></div>'
+              f'<div style="left:0;right:0;top:{FEED_BOTTOM}px;height:3px;background:#f0f"></div>'
               '<div style="left:64px;top:0;bottom:0;width:2px;background:#0ff"></div>'
               '<div style="right:64px;top:0;bottom:0;width:2px;background:#0ff"></div></div>')
 
